@@ -25,5 +25,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
     --filename=composer \
     --install-dir=/usr/local/bin
 
-WORKDIR /var/www
+RUN chown -R www-data:www-data /var/www
 
+#RUN chmod -R 777 storage/
+
+WORKDIR /var/www
