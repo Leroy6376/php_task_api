@@ -2,12 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Http\Resources\Api\TaskResource;
 use App\Models\Api\Task;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class TaskApiTest extends TestCase
@@ -30,9 +27,7 @@ class TaskApiTest extends TestCase
 
         $response = $this->get('/api/tasks');
         $response->assertStatus(200);
-        $response->assertJson(fn (AssertableJson $json) =>
-        $json->hasAll(['data', 'links', 'meta'])->where('data', [])
-        );
+        $this->assertEquals($response->json(), []);
 
         $tasks[0] = $this->example_task;
         $tasks[1] = $this->example_task;
@@ -44,15 +39,11 @@ class TaskApiTest extends TestCase
 
         $response = $this->get('/api/tasks');
         $response->assertStatus(200);
-        $response->assertJson(fn (AssertableJson $json) =>
-        $json->hasAll(['data', 'links', 'meta'])->has('data', 2));
-        $this->assertEquals($response->json('data'), $tasks);
+        $this->assertEquals($response->json(), $tasks);
 
         $response = $this->get('/api/tasks?page=2&per_page=1&search=Task 1&sort=create_date');
         $response->assertStatus(200);
-        $response->assertJson(fn (AssertableJson $json) =>
-        $json->hasAll(['data', 'links', 'meta'])->has('data', 1));
-        $this->assertEquals($response->json('data')[0], $tasks[1]);
+        $this->assertEquals($response->json()[0], $tasks[1]);
     }
 
     public function test_store_positive_test(): void
@@ -107,12 +98,12 @@ class TaskApiTest extends TestCase
 
         $task = $this->example_task;
         Task::create($task);
-
-        $response = $this->get('/api/tasks/1');
         $task['id'] = 1;
 
+        $response = $this->get('/api/tasks/1');
+
         $response->assertStatus(200);
-        $this->assertEquals($response->json()['data'], $task);
+        $this->assertEquals($response->json(), $task);
     }
 
     public function test_show_negative_test(): void
@@ -127,11 +118,11 @@ class TaskApiTest extends TestCase
 
         $task = $this->example_task;
         Task::create($task);
+        $task['id'] = 1;
 
         $response = $this->patchJson('/api/tasks/1', []);
         $response->assertStatus(200);
         $this->assertEquals($response->json()['message'], 'Task updated successfully');
-        $task['id'] = 1;
         $this->assertDatabaseCount('tasks', 1);
         $this->assertDatabaseHas('tasks', $task);
 
